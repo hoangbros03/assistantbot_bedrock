@@ -1,0 +1,1 @@
+LIMIT_PRICE = 0.001
