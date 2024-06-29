@@ -32,14 +32,17 @@ if 'memory' not in st.session_state:
 if 'chat_history' not in st.session_state:
     st.session_state.chat_history = []
 
+if 'uploader_key' not in st.session_state:
+    st.session_state.uploader_key = 0
+
 for message in st.session_state.chat_history:
     with st.chat_message(message['role']):
         st.markdown(message['text'])
 
 if 'Claude' in select_event:
-    uploaded_file = st.sidebar.file_uploader("Choose an image", type=['jpg', 'png', 'jpeg'])
+    uploaded_file = st.sidebar.file_uploader("Choose an image", type=['jpg', 'png', 'jpeg'], key=f"uploader_{str(st.session_state.uploader_key)}")
 else:
-    uploaded_file = st.sidebar.file_uploader("Choose an image", type=['jpg', 'png', 'jpeg'], disabled=True)
+    uploaded_file = st.sidebar.file_uploader("Choose an image", type=['jpg', 'png', 'jpeg'], disabled=True, key=f"uploader_{str(st.session_state.uploader_key)}")
     st.sidebar.write(":red[Only support upload image with Claude-family models]")
     
 input_text = st.chat_input("Hello it's testing...")
@@ -56,11 +59,16 @@ if input_text:
 
     st.session_state.chat_history.append({"role": "user", "text": input_text})
     if image is not None:
+        # Edit input prompt
+        prompt = f"""The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.\n\nCurrent conversation:\n{st.session_state.memory.load_memory_variables({})['history']}
+        """
+
+        # Make API request
         message = {
             "role": "user",
             "content": [
                 {
-                    "text": input_text
+                    "text": prompt
                 },
                 {
                         "image": {
@@ -85,6 +93,9 @@ if input_text:
         print(chat_response)
         chat_response = chat_response['output']['message']['content'][0]['text']
         
+        # Save to memory
+        st.session_state.memory.save_context({"input": input_text}, {"output": chat_response})
+
         # Resetting flag
         resetting = True
     else:
@@ -94,10 +105,10 @@ if input_text:
         st.markdown(chat_response)
 
     st.session_state.chat_history.append({"role": "assistant", "text": chat_response})
-
 if resetting:
     image = None
     uploaded_file = None
     st.session_state.image = None
-    st.session_state.uploaded_file = None
-    st.experimental_rerun()
+    st.session_state.uploaded_file = []
+    st.session_state.uploader_key +=1
+    st.rerun()

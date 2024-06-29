@@ -20,8 +20,6 @@ def get_client():
     return client
 
 # Available models
-# anthropic.claude-3-haiku-20240307-v1:0
-# amazon.titan-text-express-v1
 def demo_chatbot(model_id="amazon.titan-text-express-v1"):
     if 'claude' in model_id:
         return BedrockChat(
