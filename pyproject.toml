@@ -18,6 +18,8 @@ opencv-python-headless = "^4.10.0.84"
 transformers = "^4.42.3"
 anthropic = "^0.30.0"
 pandas = "^2.2.2"
+faiss-cpu = "^1.8.0.post1"
+pypdf = "^4.2.0"
 
 
 [build-system]

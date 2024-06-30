@@ -7,44 +7,12 @@ import numpy as np
 import pandas as pd
 
 import backend as demo
-from utils import get_random_string, get_model_ids, format_float_dict
+from utils import get_random_string, get_model_ids
+from components.sidebar import sidebar
 from constant import LIMIT_PRICE
 
 st.title("Your AI assistant is here!")
-
-select_event = st.sidebar.selectbox('Select model',
-                                    ["Claude 3.5 Sonnet",'Claude 3 Haiku', "Amazon Titan Text Premier",'Amazon Titan Text Express'])
-resetting = False
-
-st.sidebar.write(f"Limit price: {LIMIT_PRICE} USD")
-
-def change_max_token_limit():
-    mtl = st.session_state.max_token_limit
-    print("Update new memory.")
-    st.session_state.memory = demo.demo_memory(mtl)
-
-# Initialize session state if it does not exist
-if 'max_token_limit' not in st.session_state:
-    st.session_state.max_token_limit = 1024
-
-max_token_limit = st.sidebar.select_slider(
-    "Select max token length of memory",
-    options=[128, 256, 512, 1024, 2048],
-    value=st.session_state.max_token_limit,
-    on_change=change_max_token_limit
-)
-
-if 'token_status_obj' not in st.session_state:
-    st.session_state.token_status_obj = {}
-
-if 'memory' not in st.session_state:
-    st.session_state.memory = demo.demo_memory(max_token_limit)
-
-if 'chat_history' not in st.session_state:
-    st.session_state.chat_history = []
-
-if 'uploader_key' not in st.session_state:
-    st.session_state.uploader_key = 0
+select_event, max_token_limit, total_usage_price = sidebar()
 
 for message in st.session_state.chat_history:
     with st.chat_message(message['role']):
@@ -62,23 +30,6 @@ if uploaded_file is not None:
     bytes_data = uploaded_file.read()
     image = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
     st.sidebar.image(image, caption="Uploaded image", channels="BGR")
-
-def edit_get_table_usage(df):
-    if not df.empty:
-        df.index = ['Input tokens', 'Output tokens', 'Price']
-        return copy.deepcopy(df).drop(columns='total')
-    else:
-        return df
-
-st.sidebar.table(
-    edit_get_table_usage(pd.DataFrame(format_float_dict(copy.deepcopy(st.session_state.token_status_obj)))).T
-    )
-if 'total' in list(st.session_state.token_status_obj.keys()):
-    st.sidebar.write(f"Total price: {format_float_dict(copy.deepcopy(st.session_state.token_status_obj))['total']} USD")
-    total_usage_price = st.session_state.token_status_obj['total']
-else:
-    st.sidebar.write("Total: 0.0 USD")
-    total_usage_price = 0.0
 
 input_text = st.chat_input("Hello it's testing...", disabled=bool(total_usage_price>LIMIT_PRICE))
 
@@ -155,3 +106,4 @@ if input_text:
     st.session_state.chat_history.append({"role": "assistant", "text": chat_response})
     print(st.session_state.token_status_obj)
     st.rerun()
+
