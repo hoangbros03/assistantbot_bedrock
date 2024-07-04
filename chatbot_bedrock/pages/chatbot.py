@@ -105,5 +105,8 @@ if input_text:
 
     st.session_state.chat_history.append({"role": "assistant", "text": chat_response})
     print(st.session_state.token_status_obj)
+
+    # Remove history
+    st.session_state.memory = demo.demo_memory(max_token_limit)
     st.rerun()
 
