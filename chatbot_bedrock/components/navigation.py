@@ -1,5 +1,6 @@
 import streamlit as st
 
+
 def page_navigation():
     if st.button("Home"):
         st.switch_page("./pages/homepage.py")
