@@ -71,13 +71,13 @@ class BedrockEmbeddings(BaseModel, Embeddings):
     class Config:
         """Configuration for this pydantic object."""
 
-        extra = Extra.allow 
+        extra = Extra.allow
         print(Extra.allow)
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)  # Call the constructor of BaseModel
-        self.response_token_count= 0
-        self.test=0
-   
+        self.response_token_count = 0
+        self.test = 0
 
     def _embedding_func(self, text: str) -> List[float]:
         """Call out to Bedrock embedding endpoint."""
@@ -105,8 +105,17 @@ class BedrockEmbeddings(BaseModel, Embeddings):
                 accept="application/json",
                 contentType="application/json",
             )
-            if "ResponseMetadata" in response and "HTTPHeaders" in response["ResponseMetadata"] and "x-amzn-bedrock-input-token-count" in response["ResponseMetadata"]["HTTPHeaders"]:
-                self.response_token_count += int(response["ResponseMetadata"]["HTTPHeaders"]['x-amzn-bedrock-input-token-count'])
+            if (
+                "ResponseMetadata" in response
+                and "HTTPHeaders" in response["ResponseMetadata"]
+                and "x-amzn-bedrock-input-token-count"
+                in response["ResponseMetadata"]["HTTPHeaders"]
+            ):
+                self.response_token_count += int(
+                    response["ResponseMetadata"]["HTTPHeaders"][
+                        "x-amzn-bedrock-input-token-count"
+                    ]
+                )
 
             # format output based on provider
             response_body = json.loads(response.get("body").read())
