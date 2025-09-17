@@ -3,7 +3,9 @@ import string
 
 
 def get_random_string(length):
-    letters = string.ascii_lowercase  # Use string.ascii_uppercase for uppercase letters
+    letters = (
+        string.ascii_lowercase
+    )  # Use string.ascii_uppercase for uppercase letters
     return "".join(random.choice(letters) for i in range(length))
 
 

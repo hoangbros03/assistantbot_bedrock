@@ -18,10 +18,14 @@ from langchain_core.messages import AIMessage
 from langchain_core.messages import HumanMessage
 from langchain_text_splitters import CharacterTextSplitter
 from settings import get_settings
-from utils import get_model_ids
-from utils import get_model_prices
-# txt loader
-# pdf loader
+from backend.utils import get_model_ids
+from backend.utils import get_model_prices
+from backend.prompts import DEFAULT_PROMPT
+
+# CONSTANTS
+DEMO_CHATBOT_TEMPERATURE = 1.0
+DEMO_CHATBOT_TOP_P = 0.9
+DEMO_CHATBOT_TOP_K = 250
 
 # Setup AWS
 settings = get_settings()
@@ -46,11 +50,17 @@ def demo_chatbot(model_id="amazon.titan-text-express-v1"):
     if "claude" in model_id:
         return BedrockChat(
             model_id=model_id,
-            model_kwargs={"temperature": 1.0, "top_k": 250},
+            model_kwargs={
+                "temperature": DEMO_CHATBOT_TEMPERATURE,
+                "top_k": DEMO_CHATBOT_TOP_K,
+            },
         )
     demo_llm = BedrockLLM(
         model_id=model_id,
-        model_kwargs={"temperature": 1.0, "topP": 0.9},
+        model_kwargs={
+            "temperature": DEMO_CHATBOT_TEMPERATURE,
+            "topP": DEMO_CHATBOT_TOP_P,
+        },
     )
     return demo_llm
 
@@ -73,7 +83,9 @@ def demo_conversation(input_text, memory, model):
 
 
 def count_text_token_usage(input_text, response, memory, model_id):
-    input_prompt = f"""The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.\n\nCurrent conversation:\n\n{memory.load_memory_variables({})['history']}"""
+    input_prompt = DEFAULT_PROMPT.format(
+        current_conversation=memory.load_memory_variables({})["history"]
+    )
 
     # Count token
     model = demo_chatbot(model_id)
@@ -91,7 +103,11 @@ def count_text_token_usage(input_text, response, memory, model_id):
 def get_current_token_usage(token_status_obj, count_result, embed_model=None):
     if len(list(token_status_obj.keys())) == 0:
         for name in list(get_model_ids().values()):
-            token_status_obj[name] = [0, 0, 0.0]  # Input token, output token, price
+            token_status_obj[name] = [
+                0,
+                0,
+                0.0,
+            ]  # Input token, output token, price
         token_status_obj["total"] = 0.0
 
     # init if empty status
@@ -103,8 +119,12 @@ def get_current_token_usage(token_status_obj, count_result, embed_model=None):
             / 1000.0
         )
     else:
-        token_status_obj[count_result["model_id"]][0] += count_result["input_tokens"]
-        token_status_obj[count_result["model_id"]][1] += count_result["output_tokens"]
+        token_status_obj[count_result["model_id"]][0] += count_result[
+            "input_tokens"
+        ]
+        token_status_obj[count_result["model_id"]][1] += count_result[
+            "output_tokens"
+        ]
         token_status_obj[count_result["model_id"]][2] = (
             token_status_obj[count_result["model_id"]][0]
             * get_model_prices()[count_result["model_id"]][0]
