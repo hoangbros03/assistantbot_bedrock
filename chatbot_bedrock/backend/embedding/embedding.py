@@ -1,11 +1,16 @@
 import asyncio
 import json
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
+from typing import Dict
+from typing import List
+from typing import Optional
 
 import numpy as np
 from langchain_core.embeddings import Embeddings
-from langchain_core.pydantic_v1 import BaseModel, Extra, root_validator
+from langchain_core.pydantic_v1 import BaseModel
+from langchain_core.pydantic_v1 import Extra
+from langchain_core.pydantic_v1 import root_validator
 from langchain_core.runnables.config import run_in_executor
 
 
