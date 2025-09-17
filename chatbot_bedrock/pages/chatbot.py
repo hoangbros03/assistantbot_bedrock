@@ -8,8 +8,10 @@ import pandas as pd
 import streamlit as st
 from components.sidebar import sidebar
 from constant import LIMIT_PRICE
-from utils import get_model_ids
-from utils import get_random_string
+from backend.utils import get_model_ids
+from backend.utils import get_random_string
+from backend.enums import AllowImageFileExtensions
+from backend.prompts import DEFAULT_PROMPT
 
 st.title("Your AI assistant is here!")
 select_event, max_token_limit, total_usage_price = sidebar()
@@ -21,18 +23,20 @@ for message in st.session_state.chat_history:
 if "Claude" in select_event:
     uploaded_file = st.sidebar.file_uploader(
         "Choose an image",
-        type=["jpg", "png", "jpeg"],
+        type=AllowImageFileExtensions.values(),
         key=f"uploader_{str(st.session_state.uploader_key)}",
     )
 else:
     st.session_state.uploader_key += 1
     uploaded_file = st.sidebar.file_uploader(
         "Choose an image",
-        type=["jpg", "png", "jpeg"],
+        type=AllowImageFileExtensions.values(),
         disabled=True,
         key=f"uploader_{str(st.session_state.uploader_key)}",
     )
-    st.sidebar.write(":red[Only support upload image with Claude-family models]")
+    st.sidebar.write(
+        ":red[Only support upload image with Claude-family models]"
+    )
 
 image = None
 if uploaded_file is not None:
@@ -52,7 +56,9 @@ if input_text:
     st.session_state.chat_history.append({"role": "user", "text": input_text})
     if image is not None:
         # Edit input prompt
-        prompt = f"""The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know.\n\nCurrent conversation:\n\n{st.session_state.memory.load_memory_variables({})['history']}"""
+        prompt = DEFAULT_PROMPT.format(
+            st.session_state.memory.load_memory_variables({})["history"]
+        )
 
         # Make API request
         message = {
@@ -83,7 +89,9 @@ if input_text:
 
         # Verbose to console
         print(chat_response)
-        chat_response = chat_response["output"]["message"]["content"][0]["text"]
+        chat_response = chat_response["output"]["message"]["content"][0][
+            "text"
+        ]
 
         # Save to memory
         st.session_state.memory.save_context(
@@ -98,7 +106,9 @@ if input_text:
         st.session_state.uploader_key += 1
     else:
         chat_response = demo.demo_conversation(
-            input_text=input_text, memory=st.session_state.memory, model=select_event
+            input_text=input_text,
+            memory=st.session_state.memory,
+            model=select_event,
         )
 
         # Get usage
@@ -117,7 +127,9 @@ if input_text:
     with st.chat_message("assistant"):
         st.markdown(chat_response)
 
-    st.session_state.chat_history.append({"role": "assistant", "text": chat_response})
+    st.session_state.chat_history.append(
+        {"role": "assistant", "text": chat_response}
+    )
     print(st.session_state.token_status_obj)
 
     # Remove history
