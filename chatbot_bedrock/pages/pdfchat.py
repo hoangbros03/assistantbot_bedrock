@@ -1,7 +1,7 @@
 import backend as demo
 import streamlit as st
 from components.sidebar import sidebar
-from utils import get_model_ids
+from backend.utils import get_model_ids
 
 select_event, max_token_limit, total_usage_price = sidebar()
 
