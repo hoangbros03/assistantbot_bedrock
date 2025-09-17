@@ -1,6 +1,5 @@
-import streamlit as st
-
 import backend as demo
+import streamlit as st
 from components.sidebar import sidebar
 from utils import get_model_ids
 

@@ -1,0 +1,1 @@
+from backend.embedding.embedding import BedrockEmbeddings

@@ -1,37 +1,44 @@
+import copy
 import os
 from os import environ
-import copy
 
-from dotenv import load_dotenv
 import boto3
-from langchain_aws import ChatBedrock, BedrockLLM
-from langchain_community.chat_models import BedrockChat
-from langchain.memory import ConversationBufferMemory
+from constant import EMBED_MODEL_ID
+from dotenv import load_dotenv
+from backend.embedding import BedrockEmbeddings  # Overwrite
 from langchain.chains import ConversationChain
-from langchain_core.messages import HumanMessage, AIMessage
-
-# txt loader
+from langchain.memory import ConversationBufferMemory
+from langchain_aws import BedrockLLM
+from langchain_aws import ChatBedrock
+from langchain_community.chat_models import BedrockChat
+from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.document_loaders import TextLoader
 from langchain_community.vectorstores import FAISS
+from langchain_core.messages import AIMessage
+from langchain_core.messages import HumanMessage
 from langchain_text_splitters import CharacterTextSplitter
-
+from settings import get_settings
+from utils import get_model_ids
+from utils import get_model_prices
+# txt loader
 # pdf loader
-from langchain_community.document_loaders import PyPDFLoader
-
-from utils import get_model_ids, get_model_prices
-from embedding import BedrockEmbeddings  # Overwrite
-from constant import EMBED_MODEL_ID
 
 # Setup AWS
-load_dotenv()
-os.environ["AWS_DEFAULT_REGION"] = environ.get("AWS_DEFAULT_REGION")
-os.environ["AWS_SECRET_ACCESS_KEY"] = environ.get("AWS_SECRET_ACCESS_KEY")
-os.environ["AWS_ACCESS_KEY_ID"] = environ.get("AWS_ACCESS_KEY_ID")
-client = boto3.client("bedrock-runtime")
+settings = get_settings()
+
+
+class BedrockClientSingleton:
+    _client = None
+
+    @classmethod
+    def get_client(cls):
+        if cls._client is None:
+            cls._client = boto3.client("bedrock-runtime")
+        return cls._client
 
 
 def get_client():
-    return client
+    return BedrockClientSingleton.get_client()
 
 
 # Available models
@@ -130,7 +137,7 @@ def get_document_list(file_path: str):
 
 def get_embedding():
     br_embeddings = BedrockEmbeddings(
-        model_id="amazon.titan-embed-text-v2:0", client=client
+        model_id="amazon.titan-embed-text-v2:0", client=get_client()
     )
     return br_embeddings
 

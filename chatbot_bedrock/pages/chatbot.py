@@ -1,15 +1,15 @@
 import copy
-
 from io import StringIO
-import streamlit as st
+
+import backend as demo
 import cv2
 import numpy as np
 import pandas as pd
-
-import backend as demo
-from utils import get_random_string, get_model_ids
+import streamlit as st
 from components.sidebar import sidebar
 from constant import LIMIT_PRICE
+from utils import get_model_ids
+from utils import get_random_string
 
 st.title("Your AI assistant is here!")
 select_event, max_token_limit, total_usage_price = sidebar()
